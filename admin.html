@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - متجري الإلكتروني</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>لوحة التحكم</h1>
+        <nav>
+            <a href="index.html">العودة للمتجر</a>
+            <a href="admin.html">لوحة التحكم</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="admin-panel">
+            <h2>إدارة المنتجات</h2>
+            
+            <div class="add-product-form">
+                <h3>إضافة منتج جديد</h3>
+                <form id="addProductForm">
+                    <input type="text" id="productName" placeholder="اسم المنتج" required>
+                    <textarea id="productDescription" placeholder="وصف المنتج" required></textarea>
+                    <input type="number" id="productPrice" placeholder="السعر" step="0.01" required>
+                    <input type="text" id="productImage" placeholder="رابط الصورة" required>
+                    <button type="submit">إضافة المنتج</button>
+                </form>
+            </div>
+
+            <div class="products-list">
+                <h3>المنتجات الحالية</h3>
+                <div id="adminProductsContainer">
+                    <!-- سيتم عرض المنتجات هنا -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2023 متجري الإلكتروني. جميع الحقوق محفوظة.</p>
+    </footer>
+
+    <script src="products.js"></script>
+    <script>
+        // عرض المنتجات في لوحة التحكم
+        function displayAdminProducts() {
+            const container = document.getElementById('adminProductsContainer');
+            container.innerHTML = '';
+            
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'admin-product-card';
+                productElement.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <div class="product-info">
+                        <h4>${product.name}</h4>
+                        <p>${product.description}</p>
+                        <p class="price">$${product.price}</p>
+                    </div>
+                    <button onclick="deleteProduct(${product.id})" class="delete-btn">حذف</button>
+                `;
+                container.appendChild(productElement);
+            });
+        }
+
+        // إضافة منتج جديد
+        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('productName').value;
+            const description = document.getElementById('productDescription').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const image = document.getElementById('productImage').value;
+            
+            const newProduct = {
+                id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,
+                name,
+                description,
+                price,
+                image
+            };
+            
+            products.push(newProduct);
+            displayAdminProducts();
+            
+            // إعادة تعيين النموذج
+            document.getElementById('addProductForm').reset();
+            
+            alert('تمت إضافة المنتج بنجاح!');
+        });
+
+        // حذف منتج
+        function deleteProduct(productId) {
+            if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+                const index = products.findIndex(p => p.id === productId);
+                if (index !== -1) {
+                    products.splice(index, 1);
+                    displayAdminProducts();
+                    alert('تم حذف المنتج بنجاح!');
+                }
+            }
+        }
+
+        // عرض المنتجات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', displayAdminProducts);
+    </script>
+</body>
+</html>
