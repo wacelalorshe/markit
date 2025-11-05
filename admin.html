@@ -260,55 +260,88 @@
         }
 
         // إضافة منتج جديد - الإصدار المصحح
-        document.getElementById('addProductForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // إضافة منتج جديد - الإصدار المبسط والمصادق عليه
+document.getElementById('addProductForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('productName').value.trim();
+    const description = document.getElementById('productDescription').value.trim();
+    const price = parseFloat(document.getElementById('productPrice').value);
+    const image = document.getElementById('productImage').value.trim() || 'https://via.placeholder.com/200';
+    
+    if (!name || !description || isNaN(price)) {
+        alert('⚠️ يرجى ملء جميع الحقول بشكل صحيح');
+        return;
+    }
+    
+    // إظهار تحميل
+    const submitBtn = this.querySelector('.submit-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '⏳ جاري الإضافة...';
+    submitBtn.disabled = true;
+    
+    try {
+        // 1. إضافة المنتج للمصفوفة
+        const productData = { name, description, price, image };
+        const newProduct = addProductSimple(productData);
+        
+        // 2. حفظ البيانات
+        const saveResult = await saveProducts();
+        
+        if (saveResult.success) {
+            showMessage('✅ تمت إضافة المنتج بنجاح ورفعه تلقائياً!', 'success');
+        } else {
+            showMessage('📋 تمت الإضافة محلياً - تم نسخ البيانات للحافظة', 'info');
             
-            const name = document.getElementById('productName').value.trim();
-            const description = document.getElementById('productDescription').value.trim();
-            const price = parseFloat(document.getElementById('productPrice').value);
-            const image = document.getElementById('productImage').value.trim() || 'https://via.placeholder.com/200';
-            
-            if (!name || !description || isNaN(price)) {
-                alert('⚠️ يرجى ملء جميع الحقول بشكل صحيح');
-                return;
-            }
-            
-            // إظهار تحميل
-            const submitBtn = this.querySelector('.submit-btn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '⏳ جاري الإضافة...';
-            submitBtn.disabled = true;
-            
-            try {
-                const productData = { name, description, price, image };
-                const result = await addProduct(productData);
+            setTimeout(() => {
+                alert(`📋 خطوات الرفع اليدوي:
                 
-                if (result.saveResult.success) {
-                    showMessage('✅ تمت إضافة المنتج بنجاح ورفعه تلقائياً!', 'success');
-                } else {
-                    showMessage('📋 تمت الإضافة محلياً - تم نسخ البيانات للحافظة', 'info');
-                    
-                    setTimeout(() => {
-                        alert(`📋 خطوات الرفع اليدوي:
-                        
 1. اذهب إلى: https://github.com/wacelalorshe/markit
 2. افتح ملف products-data.json
 3. انقر Edit واستبدل المحتوى
 4. احفظ التغييرات
 
 البيانات جاهزة في الحافظة!`);
-                    }, 1000);
-                }
+            }, 1000);
+        }
+        
+        // 3. تحديث العرض
+        displayAdminProducts();
+        
+        // 4. إعادة تعيين النموذج
+        document.getElementById('addProductForm').reset();
+        
+    } catch (error) {
+        console.error('❌ خطأ في إضافة المنتج:', error);
+        showMessage('❌ حدث خطأ في إضافة المنتج: ' + error.message, 'info');
+    } finally {
+        // إعادة زر الإرسال لحالته الطبيعية
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+// حذف منتج - الإصدار المصحح
+async function deleteProductFromSystem(productId) {
+    if (confirm('⚠️ هل أنت متأكد من حذف هذا المنتج؟')) {
+        try {
+            // 1. حذف المنتج من المصفوفة
+            const success = deleteProductSimple(productId);
+            
+            if (success) {
+                // 2. حفظ البيانات بعد الحذف
+                await saveProducts();
                 
-                // تحديث العرض
+                // 3. تحديث العرض
                 displayAdminProducts();
-                
-                // إعادة تعيين النموذج
-                document.getElementById('addProductForm').reset();
-                
-            } catch (error) {
-                console.error('خطأ في إضافة المنتج:', error);
-                showMessage('❌ حدث خطأ في إضافة المنتج', 'info');
+                showMessage('🗑️ تم حذف المنتج بنجاح!', 'success');
+            }
+        } catch (error) {
+            console.error('❌ خطأ في حذف المنتج:', error);
+            showMessage('❌ حدث خطأ في حذف المنتج', 'info');
+        }
+    }
+}
             } finally {
                 // إعادة زر الإرسال لحالته الطبيعية
                 submitBtn.innerHTML = originalText;
