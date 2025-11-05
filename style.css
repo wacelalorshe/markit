@@ -68,6 +68,8 @@ footer {
     height: 200px;
     object-fit: cover;
     border-radius: 4px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
 }
 
 .product-card h3 {
@@ -163,6 +165,8 @@ footer {
     height: 80px;
     object-fit: cover;
     border-radius: 4px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
 }
 
 .product-info {
@@ -180,4 +184,13 @@ footer {
 
 .delete-btn:hover {
     background-color: #c0392b;
+}
+
+/* رسالة عدم وجود منتجات */
+.no-products {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    padding: 2rem;
+    grid-column: 1 / -1;
 }
