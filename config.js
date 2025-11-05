@@ -3,14 +3,17 @@ const GITHUB_CONFIG = {
     // التوكن الذي قدمته
     TOKEN: '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',
     
-    // معلومات المستودع - تأكد من أنها صحيحة
-    OWNER: 'markit735',
+    // معلومات المستودع - تم التصحيح
+    OWNER: 'wacelalorshe',
     REPO: 'markit',
     BRANCH: 'main',
     
     // ملف البيانات
     DATA_FILE: 'products-data.json'
 };
+
+// رابط ملف المنتجات في GitHub - الرابط الصحيح
+const PRODUCTS_URL = 'https://raw.githubusercontent.com/wacelalorshe/markit/main/products-data.json';
 
 // دالة للحصول على التوكن
 function getGitHubToken() {
