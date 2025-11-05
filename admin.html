@@ -20,13 +20,43 @@
             <div class="admin-header">
                 <h2>إدارة المنتجات</h2>
                 <div class="admin-actions">
-                    <button onclick="exportDataForGitHub()" class="export-btn">📋 تصدير البيانات لـ GitHub</button>
+                    <button onclick="autoUploadToGitHub()" class="auto-upload-btn">🚀 رفع تلقائي لـ GitHub</button>
+                    <button onclick="exportDataForGitHub()" class="export-btn">📋 نسخ للرفع اليدوي</button>
                     <button onclick="clearAllProducts()" class="clear-btn">🗑️ مسح الكل</button>
                 </div>
             </div>
             
-            <div class="connection-status" id="connectionStatus">
-                <!-- سيتم عرض حالة الاتصال هنا -->
+            <div class="github-upload-section">
+                <div class="connection-status" id="connectionStatus">
+                    <!-- سيتم عرض حالة الاتصال هنا -->
+                </div>
+                
+                <div class="github-config">
+                    <h4>⚙️ إعدادات الرفع التلقائي</h4>
+                    <div class="config-fields">
+                        <div class="form-group">
+                            <label for="githubOwner">مالك المستودع:</label>
+                            <input type="text" id="githubOwner" placeholder="اسم المستخدم في GitHub" 
+                                   value="markit735">
+                        </div>
+                        <div class="form-group">
+                            <label for="githubRepo">اسم المستودع:</label>
+                            <input type="text" id="githubRepo" placeholder="اسم المستودع" 
+                                   value="markit">
+                        </div>
+                        <div class="form-group">
+                            <label for="githubToken">GitHub Token:</label>
+                            <input type="password" id="githubToken" placeholder="ادخل token هنا" 
+                                   value="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">
+                            <small class="help-text">
+                                <a href="https://github.com/settings/tokens" target="_blank">
+                                    🎫 احصل على token من هنا
+                                </a>
+                            </small>
+                        </div>
+                    </div>
+                    <button onclick="saveGitHubConfig()" class="save-config-btn">💾 حفظ الإعدادات</button>
+                </div>
             </div>
             
             <div class="add-product-form">
@@ -74,6 +104,7 @@
         <p>© 2023 متجري الإلكتروني. جميع الحقوق محفوظة.</p>
     </footer>
 
+    <script src="config.js"></script>
     <script src="products.js"></script>
     <script>
         // عرض حالة الاتصال
@@ -157,8 +188,74 @@
             });
         }
 
+        // حفظ إعدادات GitHub
+        function saveGitHubConfig() {
+            const owner = document.getElementById('githubOwner').value;
+            const repo = document.getElementById('githubRepo').value;
+            const token = document.getElementById('githubToken').value;
+            
+            if (owner && repo) {
+                GITHUB_CONFIG.OWNER = owner;
+                GITHUB_CONFIG.REPO = repo;
+                
+                // حفظ في localStorage
+                localStorage.setItem('github_owner', owner);
+                localStorage.setItem('github_repo', repo);
+                
+                if (token && token !== '••••••••') {
+                    localStorage.setItem('github_token', token);
+                }
+                
+                showMessage('✅ تم حفظ الإعدادات بنجاح', 'success');
+                
+                // إعادة تحميل الصفحة لتطبيق التغييرات
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+                
+            } else {
+                showMessage('⚠️ يرجى ملء الحقول المطلوبة', 'info');
+            }
+        }
+
+        // الرفع التلقائي لـ GitHub
+        async function autoUploadToGitHub() {
+            const uploadBtn = document.querySelector('.auto-upload-btn');
+            const originalText = uploadBtn.innerHTML;
+            
+            try {
+                uploadBtn.innerHTML = '⏳ جاري الرفع...';
+                uploadBtn.disabled = true;
+                
+                const result = await saveProducts();
+                
+                if (result.success) {
+                    showMessage('✅ تم الرفع التلقائي بنجاح! سيظهر المنتج للجميع خلال دقيقة.', 'success');
+                } else {
+                    showMessage(`⚠️ تم النسخ للحافظة: ${result.error}`, 'info');
+                    
+                    setTimeout(() => {
+                        alert(`📋 خطوات الرفع اليدوي:
+                        
+1. اذهب إلى: https://github.com/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}
+2. افتح ملف products-data.json
+3. انقر Edit واستبدل المحتوى
+4. احفظ التغييرات
+
+البيانات جاهزة في الحافظة!`);
+                    }, 1000);
+                }
+                
+            } catch (error) {
+                showMessage(`❌ خطأ في الرفع: ${error.message}`, 'info');
+            } finally {
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+            }
+        }
+
         // إضافة منتج جديد
-        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+        document.getElementById('addProductForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const name = document.getElementById('productName').value.trim();
@@ -180,12 +277,16 @@
             
             addProduct(newProduct);
             displayAdminProducts();
-            
-            // إعادة تعيين النموذج
             document.getElementById('addProductForm').reset();
             
-            // إظهار رسالة نجاح
-            showMessage('✅ تمت إضافة المنتج بنجاح!', 'success');
+            // سؤال المستخدم عن طريقة الحفظ
+            const userChoice = confirm('هل تريد الرفع التلقائي لـ GitHub؟\n\nموافق: 🚀 رفع تلقائي\nإلغاء: 📋 نسخ للرفع اليدوي');
+            
+            if (userChoice) {
+                await autoUploadToGitHub();
+            } else {
+                exportDataForGitHub();
+            }
         });
 
         // حذف منتج
@@ -194,13 +295,14 @@
                 const product = products.find(p => p.id === productId);
                 if (product) {
                     deleteProduct(productId);
+                    saveProducts();
                     displayAdminProducts();
                     showMessage('🗑️ تم حذف المنتج بنجاح!', 'success');
                 }
             }
         }
 
-        // تعديل منتج (وظيفة أساسية)
+        // تعديل منتج
         function editProduct(productId) {
             const product = products.find(p => p.id === productId);
             if (product) {
@@ -219,29 +321,22 @@
 
         // تصدير البيانات لنسخها إلى GitHub
         function exportDataForGitHub() {
-            const dataToExport = {
-                products: products
-            };
-            
+            const dataToExport = { products: products };
             const jsonString = JSON.stringify(dataToExport, null, 2);
             
-            // نسخ إلى الحافظة
             navigator.clipboard.writeText(jsonString).then(() => {
                 showMessage('✅ تم نسخ البيانات إلى الحافظة', 'success');
                 
-                // إظهار التعليمات
                 setTimeout(() => {
-                    alert(`📋 خطوات تحديث GitHub:
+                    alert(`📋 خطوات الرفع اليدوي:
                     
-1. اذهب إلى مستودع GitHub
-2. افتح ملف products-data.json
-3. انقر على أيقونة القلم (Edit)
-4. استبدل المحتوى بالبيانات الجديدة
-5. انزل لأسفل وانقر "Commit changes"
+1. اذهب إلى: https://github.com/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}
+2. افتح ملف products-data.json  
+3. انقر Edit واستبدل المحتوى
+4. احفظ التغييرات
 
-سيتم تحديث البيانات لجميع الزوار فوراً!`);
+البيانات جاهزة في الحافظة!`);
                 }, 1000);
-                
             }).catch(() => {
                 // إذا فشل النسخ، عرض البيانات في نافذة
                 const jsonData = prompt('انسخ هذا JSON وأعده رفعه إلى GitHub:', jsonString);
@@ -292,11 +387,30 @@
                 loadProducts().then(() => {
                     displayAdminProducts();
                 });
-            }, 30000); // كل 30 ثانية
+            }, 30000);
+        }
+
+        // تحميل الإعدادات عند بدء التشغيل
+        function loadSavedConfig() {
+            const savedOwner = localStorage.getItem('github_owner');
+            const savedRepo = localStorage.getItem('github_repo');
+            
+            if (savedOwner) {
+                document.getElementById('githubOwner').value = savedOwner;
+            }
+            
+            if (savedRepo) {
+                document.getElementById('githubRepo').value = savedRepo;
+            }
+            
+            // إخفاء التوكن لأسباب أمنية
+            document.getElementById('githubToken').value = '••••••••';
         }
 
         // عرض المنتجات عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', function() {
+            loadSavedConfig();
+            
             // انتظر قليلاً لتحميل البيانات ثم اعرضها
             setTimeout(() => {
                 displayAdminProducts();
