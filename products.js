@@ -8,13 +8,11 @@ let isOnline = true;
 async function loadProducts() {
     try {
         console.log('🔗 جاري تحميل المنتجات من GitHub...');
-        console.log('📝 الرابط:', PRODUCTS_URL);
         
-        // إضافة timestamp لمنع التخزين المؤقت
         const response = await fetch(PRODUCTS_URL + '?t=' + Date.now());
         
         if (!response.ok) {
-            throw new Error(`فشل في تحميل البيانات: ${response.status} ${response.statusText}`);
+            throw new Error(`فشل في تحميل البيانات: ${response.status}`);
         }
         
         const data = await response.json();
@@ -37,24 +35,8 @@ function loadFromLocalStorage() {
         products = JSON.parse(savedProducts);
         console.log('📱 تم تحميل المنتجات من localStorage:', products.length, 'منتج');
     } else {
-        // بيانات افتراضية إذا لم توجد أي بيانات
-        products = [
-            {
-                id: 1,
-                name: "هاتف ذكي",
-                description: "هاتف ذكي حديث بمواصفات عالية",
-                price: 299.99,
-                image: "https://via.placeholder.com/200"
-            },
-            {
-                id: 2,
-                name: "لابتوب",
-                description: "لابتوب قوي للأعمال والألعاب",
-                price: 899.99,
-                image: "https://via.placeholder.com/200"
-            }
-        ];
-        console.log('🔧 تم تحميل البيانات الافتراضية');
+        products = [];
+        console.log('🔧 لا توجد بيانات محفوظة');
     }
 }
 
@@ -66,12 +48,8 @@ function getNextId() {
 
 // دوال GitHub API للرفع التلقائي
 async function updateGitHubFile() {
-    const token = getGitHubToken();
+    const token = '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';
     
-    if (!token) {
-        throw new Error('❌ لم يتم إعداد GitHub Token');
-    }
-
     try {
         console.log('🔼 جاري الرفع التلقائي إلى GitHub...');
         
@@ -90,9 +68,7 @@ async function updateGitHubFile() {
         if (getResponse.ok) {
             const fileData = await getResponse.json();
             sha = fileData.sha;
-            console.log('📁 وجد الملف الحالي، SHA:', sha);
-        } else {
-            console.log('📄 الملف غير موجود، سيتم إنشاؤه جديد');
+            console.log('📁 وجد الملف الحالي');
         }
 
         // 2. تحضير البيانات للرفع
@@ -123,7 +99,6 @@ async function updateGitHubFile() {
 
         if (!updateResponse.ok) {
             const errorData = await updateResponse.json();
-            console.error('❌ خطأ في الرفع:', errorData);
             throw new Error(errorData.message || 'فشل في رفع الملف');
         }
 
@@ -136,8 +111,8 @@ async function updateGitHubFile() {
     }
 }
 
-// دالة محسنة لحفظ المنتجات مع الرفع التلقائي
-async function saveProductsWithUpload() {
+// دالة الحفظ مع الرفع التلقائي
+async function saveProducts() {
     // حفظ في localStorage أولاً
     localStorage.setItem('storeProducts', JSON.stringify(products));
     console.log('💾 تم الحفظ في localStorage');
@@ -163,24 +138,42 @@ async function saveProductsWithUpload() {
     }
 }
 
-// دالة الحفظ الرئيسية
-async function saveProducts() {
-    return await saveProductsWithUpload();
+// إضافة منتج جديد - الدالة المصححة
+async function addProduct(productData) {
+    // إنشاء المنتج الجديد
+    const newProduct = {
+        id: getNextId(),
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        image: productData.image
+    };
+    
+    // إضافة المنتج للمصفوفة
+    products.push(newProduct);
+    console.log('➕ تم إضافة منتج جديد:', newProduct.name);
+    
+    // حفظ البيانات مباشرة
+    const result = await saveProducts();
+    
+    return { product: newProduct, saveResult: result };
 }
 
-// إضافة منتج جديد
-function addProduct(product) {
-    product.id = getNextId();
-    products.push(product);
-    console.log('➕ تم إضافة منتج جديد:', product.name);
-    return product;
-}
-
-// حذف منتج
-function deleteProduct(productId) {
-    const product = products.find(p => p.id === productId);
-    products = products.filter(p => p.id !== productId);
-    console.log('🗑️ تم حذف المنتج:', product?.name);
+// حذف منتج - الدالة المصححة
+async function deleteProduct(productId) {
+    const productIndex = products.findIndex(p => p.id === productId);
+    
+    if (productIndex !== -1) {
+        const deletedProduct = products[productIndex];
+        products.splice(productIndex, 1);
+        console.log('🗑️ تم حذف المنتج:', deletedProduct.name);
+        
+        // حفظ البيانات بعد الحذف
+        await saveProducts();
+        return true;
+    }
+    
+    return false;
 }
 
 // تحميل المنتجات فوراً عند تشغيل الصفحة
