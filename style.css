@@ -84,10 +84,55 @@ footer {
     gap: 1rem;
 }
 
+/* قسم إعدادات GitHub */
+.github-upload-section {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #eee;
+    background: #f8f9fa;
+}
+
+.github-config {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    margin-top: 1rem;
+}
+
+.github-config h4 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.config-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.save-config-btn {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.save-config-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
 /* حالة الاتصال */
 .connection-status {
-    padding: 1rem 2rem;
-    border-bottom: 1px solid #eee;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
 }
 
 .online-status {
@@ -180,6 +225,15 @@ footer {
     margin-top: 0.3rem;
     font-size: 0.85rem;
     color: #6c757d;
+}
+
+.help-text a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.help-text a:hover {
+    text-decoration: underline;
 }
 
 .submit-btn {
@@ -357,7 +411,29 @@ footer {
     color: #2c3e50;
 }
 
-/* الأزرار */
+/* أزرار الرفع */
+.auto-upload-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.auto-upload-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.auto-upload-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .export-btn, .clear-btn {
     background: linear-gradient(135deg, #6f42c1, #5a2d9c);
     color: white;
@@ -455,6 +531,10 @@ footer {
     .admin-actions {
         flex-direction: column;
         width: 100%;
+    }
+    
+    .config-fields {
+        grid-template-columns: 1fr;
     }
     
     .form-row {
