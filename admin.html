@@ -10,9 +10,9 @@
     <header>
         <h1>لوحة التحكم</h1>
         <nav>
-    <a href="index.html">العودة للمتجر</a>
-    <a href="admin.html">لوحة التحكم</a>
-</nav>
+            <a href="/">العودة للمتجر</a>
+            <a href="/admin.html">لوحة التحكم</a>
+        </nav>
     </header>
 
     <main>
@@ -54,7 +54,7 @@
                 const productElement = document.createElement('div');
                 productElement.className = 'admin-product-card';
                 productElement.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
+                    <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/200'">
                     <div class="product-info">
                         <h4>${product.name}</h4>
                         <p>${product.description}</p>
@@ -73,10 +73,10 @@
             const name = document.getElementById('productName').value;
             const description = document.getElementById('productDescription').value;
             const price = parseFloat(document.getElementById('productPrice').value);
-            const image = document.getElementById('productImage').value;
+            const image = document.getElementById('productImage').value || 'https://via.placeholder.com/200';
             
             const newProduct = {
-                id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,
+                id: getNextId(),
                 name,
                 description,
                 price,
@@ -84,6 +84,7 @@
             };
             
             products.push(newProduct);
+            saveProducts(); // حفظ في localStorage
             displayAdminProducts();
             
             // إعادة تعيين النموذج
@@ -98,6 +99,7 @@
                 const index = products.findIndex(p => p.id === productId);
                 if (index !== -1) {
                     products.splice(index, 1);
+                    saveProducts(); // حفظ في localStorage
                     displayAdminProducts();
                     alert('تم حذف المنتج بنجاح!');
                 }
@@ -105,7 +107,10 @@
         }
 
         // عرض المنتجات عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', displayAdminProducts);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts(); // تأكد من تحميل أحدث البيانات
+            displayAdminProducts();
+        });
     </script>
 </body>
 </html>
