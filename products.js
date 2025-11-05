@@ -1,5 +1,5 @@
-// رابط ملف المنتجات في GitHub - ضع رابطك الحقيقي هنا
-const PRODUCTS_URL = 'https://raw.githubusercontent.com/your-username/your-repo-name/main/products-data.json';
+// رابط ملف المنتجات في GitHub
+const PRODUCTS_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/main/products-data.json`;
 
 let products = [];
 let isOnline = true;
@@ -29,7 +29,7 @@ async function loadProducts() {
     }
 }
 
-// تحميل من localStorage (نسخة احتياطية عندما يكون غير متصل بالإنترنت)
+// تحميل من localStorage (نسخة احتياطية)
 function loadFromLocalStorage() {
     const savedProducts = localStorage.getItem('storeProducts');
     if (savedProducts) {
@@ -50,41 +50,118 @@ function loadFromLocalStorage() {
     }
 }
 
-// حفظ المنتجات - يحفظ في localStorage ويظهر رسالة للمستخدم
-function saveProducts() {
-    // حفظ في localStorage للزوار الحاليين
-    localStorage.setItem('storeProducts', JSON.stringify(products));
-    
-    // إظهار رسالة للمسؤول
-    if (isOnline) {
-        alert('⚠️ تم حفظ المنتج محلياً\n\nلجعل المنتج يظهر للجميع:\n1. اذهب لمستودع GitHub\n2. انسخ البيانات من أدوات المطور (F12)\n3. أعد رفع products-data.json');
-    } else {
-        alert('✅ تم حفظ المنتج في المتصفح\nسيظهر للزوار الحاليين فقط');
-    }
-    
-    // إظهار البيانات في console لنسخها بسهولة
-    console.log('📋 انسخ هذا JSON وأعده رفعه إلى GitHub:');
-    console.log(JSON.stringify({ products }, null, 2));
-}
-
 // الحصول على آخر ID
 function getNextId() {
     if (products.length === 0) return 1;
     return Math.max(...products.map(p => p.id)) + 1;
 }
 
+// دوال GitHub API للرفع التلقائي
+async function updateGitHubFile() {
+    const token = getGitHubToken();
+    
+    if (!token) {
+        throw new Error('❌ لم يتم إعداد GitHub Token');
+    }
+
+    try {
+        // 1. الحصول على SHA الخاص بالملف الحالي
+        const getResponse = await fetch(
+            `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${GITHUB_CONFIG.DATA_FILE}`,
+            {
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+
+        let sha = '';
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            sha = fileData.sha;
+        }
+
+        // 2. تحضير البيانات للرفع
+        const content = {
+            products: products
+        };
+        
+        const contentBase64 = btoa(JSON.stringify(content, null, 2));
+        
+        // 3. رفع الملف المحدث
+        const updateResponse = await fetch(
+            `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${GITHUB_CONFIG.DATA_FILE}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `🛍️ تحديث المنتجات - ${new Date().toLocaleString()}`,
+                    content: contentBase64,
+                    sha: sha,
+                    branch: GITHUB_CONFIG.BRANCH
+                })
+            }
+        );
+
+        if (!updateResponse.ok) {
+            const errorData = await updateResponse.json();
+            throw new Error(errorData.message || 'فشل في رفع الملف');
+        }
+
+        return true;
+        
+    } catch (error) {
+        console.error('GitHub API Error:', error);
+        throw error;
+    }
+}
+
+// دالة محسنة لحفظ المنتجات مع الرفع التلقائي
+async function saveProductsWithUpload() {
+    // حفظ في localStorage أولاً
+    localStorage.setItem('storeProducts', JSON.stringify(products));
+    
+    try {
+        // محاولة الرفع التلقائي
+        await updateGitHubFile();
+        return { success: true, method: 'auto' };
+        
+    } catch (error) {
+        console.log('الرفع التلقائي فشل، استخدام النسخ اليدوي:', error);
+        
+        // العودة للطريقة اليدوية
+        const jsonString = JSON.stringify({ products }, null, 2);
+        navigator.clipboard.writeText(jsonString);
+        
+        return { 
+            success: false, 
+            method: 'manual',
+            error: error.message,
+            data: jsonString
+        };
+    }
+}
+
+// دالة الحفظ الرئيسية
+async function saveProducts() {
+    return await saveProductsWithUpload();
+}
+
 // إضافة منتج جديد
 function addProduct(product) {
     product.id = getNextId();
     products.push(product);
-    saveProducts();
     return product;
 }
 
 // حذف منتج
 function deleteProduct(productId) {
     products = products.filter(p => p.id !== productId);
-    saveProducts();
 }
 
 // تحميل المنتجات فوراً عند تشغيل الصفحة
