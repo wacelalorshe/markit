@@ -1,85 +1,88 @@
-// نظام مبسط يعمل 100% - إصدار Wael
-const PRODUCTS_URL = 'https://raw.githubusercontent.com/wacelalorshe/markit/main/products-data.json';
+// نظام إدارة المنتجات الكامل - إصدار وائل
+console.log('🛍️ نظام المتجر - تم التحميل');
 
-let products = [];
-let isOnline = true;
+// بيانات المنتجات
+let storeProducts = [];
+let storeIsOnline = true;
 
-// تحميل المنتجات
-async function loadProducts() {
+// تحميل المنتجات من GitHub
+async function loadStoreProducts() {
     try {
-        console.log('🔄 جاري تحميل المنتجات من GitHub...');
-        const response = await fetch(PRODUCTS_URL + '?t=' + Date.now());
+        console.log('🔗 جاري تحميل المنتجات من GitHub...');
+        const response = await fetch('https://raw.githubusercontent.com/wacelalorshe/markit/main/products-data.json?t=' + Date.now());
         
         if (response.ok) {
             const data = await response.json();
-            products = data.products || [];
-            isOnline = true;
-            console.log('✅ تم تحميل ' + products.length + ' منتج من GitHub');
+            storeProducts = data.products || [];
+            storeIsOnline = true;
+            console.log('✅ تم تحميل ' + storeProducts.length + ' منتج من GitHub');
         } else {
-            throw new Error('فشل في التحميل من GitHub');
+            throw new Error('فشل في التحميل من GitHub: ' + response.status);
         }
     } catch (error) {
-        console.log('📱 استخدام البيانات المحلية');
-        isOnline = false;
+        console.log('📱 استخدام البيانات المحلية:', error.message);
+        storeIsOnline = false;
         loadFromLocalStorage();
     }
 }
 
 // تحميل من localStorage
 function loadFromLocalStorage() {
-    const saved = localStorage.getItem('storeProducts');
+    const saved = localStorage.getItem('myStoreProducts');
     if (saved) {
-        products = JSON.parse(saved);
-        console.log('📦 تم تحميل ' + products.length + ' منتج من التخزين المحلي');
+        storeProducts = JSON.parse(saved);
+        console.log('💾 تم تحميل ' + storeProducts.length + ' منتج من التخزين المحلي');
     } else {
-        products = [];
+        storeProducts = [];
         console.log('🆕 لا توجد منتجات محفوظة');
     }
 }
 
-// الحصول على ID جديد
-function getNextId() {
-    if (products.length === 0) return 1;
-    const maxId = Math.max(...products.map(p => p.id));
+// إنشاء ID جديد
+function createNewId() {
+    if (storeProducts.length === 0) return 1;
+    const maxId = Math.max(...storeProducts.map(p => p.id));
     return maxId + 1;
 }
 
-// ✅ الدالة الأساسية لإضافة منتج - هذه التي يجب أن تعمل
-function addNewProduct(productData) {
-    console.log('🎯 بدء إضافة منتج جديد...', productData);
+// إضافة منتج جديد
+function addNewProduct(productInfo) {
+    console.log('🎯 بدء إضافة منتج جديد...');
     
-    // إنشاء المنتج الجديد
+    // التحقق من البيانات
+    if (!productInfo.name || !productInfo.description || !productInfo.price) {
+        throw new Error('بيانات المنتج غير مكتملة');
+    }
+    
+    // إنشاء المنتج
     const newProduct = {
-        id: getNextId(),
-        name: productData.name,
-        description: productData.description,
-        price: productData.price,
-        image: productData.image || 'https://via.placeholder.com/200'
+        id: createNewId(),
+        name: productInfo.name.trim(),
+        description: productInfo.description.trim(),
+        price: parseFloat(productInfo.price),
+        image: productInfo.image?.trim() || 'https://via.placeholder.com/200'
     };
     
-    // إضافة للمصفوفة
-    products.push(newProduct);
-    console.log('➕ تم إضافة المنتج للمصفوفة:', newProduct);
+    // الإضافة للمصفوفة
+    storeProducts.push(newProduct);
+    console.log('➕ تمت إضافة المنتج:', newProduct.name);
     
-    // حفظ في localStorage
-    localStorage.setItem('storeProducts', JSON.stringify(products));
-    console.log('💾 تم الحفظ في localStorage');
-    
-    // عرض المصفوفة الحالية
-    console.log('📊 المنتجات الحالية:', products);
+    // الحفظ في التخزين المحلي
+    localStorage.setItem('myStoreProducts', JSON.stringify(storeProducts));
+    console.log('💾 تم الحفظ في التخزين المحلي');
     
     return newProduct;
 }
 
-// ✅ دالة الحذف
-function deleteProductById(productId) {
+// حذف منتج
+function removeProduct(productId) {
     console.log('🗑️ محاولة حذف منتج رقم:', productId);
     
-    const initialLength = products.length;
-    products = products.filter(p => p.id !== productId);
+    const initialLength = storeProducts.length;
+    storeProducts = storeProducts.filter(p => p.id !== productId);
     
-    if (products.length < initialLength) {
-        localStorage.setItem('storeProducts', JSON.stringify(products));
+    if (storeProducts.length < initialLength) {
+        localStorage.setItem('myStoreProducts', JSON.stringify(storeProducts));
         console.log('✅ تم حذف المنتج بنجاح');
         return true;
     } else {
@@ -88,14 +91,20 @@ function deleteProductById(productId) {
     }
 }
 
-// ✅ دالة الحفظ للرفع لـ GitHub
-async function saveProductsToGitHub() {
+// الرفع التلقائي إلى GitHub
+async function uploadToGitHubAuto() {
+    console.log('🚀 بدء الرفع التلقائي إلى GitHub...');
+    
     const token = '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';
     
+    // التحقق من التوكن
+    if (!token || token === 'YOUR_TOKEN_HERE') {
+        throw new Error('❌ لم يتم إعداد GitHub Token بشكل صحيح');
+    }
+    
     try {
-        console.log('🚀 محاولة الرفع لـ GitHub...');
-        
-        // الحصول على SHA الحالي
+        // 1. الحصول على الملف الحالي
+        console.log('📡 جاري جلب الملف الحالي...');
         const getResponse = await fetch(
             'https://api.github.com/repos/wacelalorshe/markit/contents/products-data.json',
             {
@@ -107,48 +116,71 @@ async function saveProductsToGitHub() {
         );
 
         let sha = '';
+        
         if (getResponse.ok) {
             const fileData = await getResponse.json();
             sha = fileData.sha;
+            console.log('✅ تم الحصول على الملف الحالي');
+        } else if (getResponse.status === 404) {
+            console.log('📄 الملف غير موجود، سيتم إنشاؤه جديد');
+        } else {
+            throw new Error(`فشل في جلب الملف: ${getResponse.status} ${getResponse.statusText}`);
         }
 
-        // تحضير المحتوى
-        const content = { products: products };
-        const contentBase64 = btoa(JSON.stringify(content, null, 2));
+        // 2. تحضير البيانات للرفع
+        console.log('📦 تحضير البيانات للرفع...');
+        const content = { products: storeProducts };
+        const contentString = JSON.stringify(content, null, 2);
+        const contentBase64 = btoa(unescape(encodeURIComponent(contentString)));
         
-        // الرفع
+        // 3. رفع الملف المحدث
+        console.log('🔼 جاري رفع الملف...');
         const updateResponse = await fetch(
             'https://api.github.com/repos/wacelalorshe/markit/contents/products-data.json',
             {
                 method: 'PUT',
                 headers: {
                     'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    message: `تحديث المنتجات - ${new Date().toLocaleString('ar-SA')}`,
+                    message: `🛍️ تحديث المنتجات - ${new Date().toLocaleString('ar-SA')}`,
                     content: contentBase64,
-                    sha: sha
+                    sha: sha,
+                    branch: 'main'
                 })
             }
         );
 
         if (updateResponse.ok) {
-            console.log('✅ تم الرفع لـ GitHub بنجاح');
-            return { success: true };
+            const result = await updateResponse.json();
+            console.log('✅ تم الرفع بنجاح إلى GitHub');
+            return { 
+                success: true, 
+                message: 'تم الرفع التلقائي بنجاح!',
+                url: result.content.html_url
+            };
         } else {
-            throw new Error('فشل في الرفع');
+            const errorData = await updateResponse.json();
+            console.error('❌ خطأ في الرفع:', errorData);
+            throw new Error(errorData.message || `خطأ في الرفع: ${updateResponse.status}`);
         }
         
     } catch (error) {
-        console.log('❌ فشل الرفع التلقائي:', error);
+        console.error('❌ فشل الرفع التلقائي:', error);
         return { 
             success: false, 
-            error: error.message,
-            data: JSON.stringify({ products: products }, null, 2)
+            message: `فشل الرفع: ${error.message}`,
+            data: JSON.stringify({ products: storeProducts }, null, 2)
         };
     }
 }
 
-// التحميل الأولي
-loadProducts();
+// الحصول على جميع المنتجات
+function getAllProducts() {
+    return storeProducts;
+}
+
+// التحميل التلقائي عند بدء التشغيل
+loadStoreProducts();
