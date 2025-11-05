@@ -10,14 +10,20 @@
     <header>
         <h1>متجري الإلكتروني</h1>
         <nav>
-    <a href="/">الرئيسية</a>
-    <a href="/admin.html">لوحة التحكم</a>
-</nav>
+            <a href="/">الرئيسية</a>
+            <a href="/admin.html">لوحة التحكم</a>
+        </nav>
     </header>
 
     <main>
         <div class="products-container" id="productsContainer">
             <!-- سيتم عرض المنتجات هنا باستخدام JavaScript -->
+        </div>
+        
+        <div style="text-align: center; margin: 20px;">
+            <button onclick="location.reload()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px;">
+                تحديث القائمة
+            </button>
         </div>
     </main>
 
@@ -27,16 +33,24 @@
 
     <script src="products.js"></script>
     <script>
-        // عرض المنتجات
+        // عرض المنتجات في المتجر
         function displayProducts() {
             const container = document.getElementById('productsContainer');
             container.innerHTML = '';
+            
+            // تأكد من تحميل أحدث البيانات
+            loadProducts();
+            
+            if (products.length === 0) {
+                container.innerHTML = '<p class="no-products">لا توجد منتجات متاحة حالياً</p>';
+                return;
+            }
             
             products.forEach(product => {
                 const productElement = document.createElement('div');
                 productElement.className = 'product-card';
                 productElement.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
+                    <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/200'">
                     <h3>${product.name}</h3>
                     <p>${product.description}</p>
                     <p class="price">$${product.price}</p>
@@ -48,11 +62,23 @@
 
         // دالة إضافة إلى السلة (مثال)
         function addToCart(productId) {
-            alert(`تمت إضافة المنتج ${productId} إلى السلة`);
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                alert(`تمت إضافة "${product.name}" إلى السلة`);
+                // هنا يمكنك إضافة منطق السلة الحقيقي
+            }
         }
 
         // عرض المنتجات عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', displayProducts);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts(); // تأكد من تحميل أحدث البيانات
+            displayProducts();
+        });
+
+        // تحديث العرض عند العودة إلى الصفحة
+        window.addEventListener('pageshow', function() {
+            displayProducts();
+        });
     </script>
 </body>
 </html>
