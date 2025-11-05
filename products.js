@@ -1,5 +1,5 @@
-// رابط ملف المنتجات في GitHub
-const PRODUCTS_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/main/products-data.json`;
+// رابط ملف المنتجات في GitHub - الرابط الثابت
+const PRODUCTS_URL = 'https://raw.githubusercontent.com/wacelalorshe/markit/main/products-data.json';
 
 let products = [];
 let isOnline = true;
@@ -7,23 +7,24 @@ let isOnline = true;
 // تحميل المنتجات من GitHub
 async function loadProducts() {
     try {
-        console.log('جاري تحميل المنتجات من GitHub...');
+        console.log('🔗 جاري تحميل المنتجات من GitHub...');
+        console.log('📝 الرابط:', PRODUCTS_URL);
         
         // إضافة timestamp لمنع التخزين المؤقت
         const response = await fetch(PRODUCTS_URL + '?t=' + Date.now());
         
         if (!response.ok) {
-            throw new Error('فشل في تحميل البيانات من GitHub');
+            throw new Error(`فشل في تحميل البيانات: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
         products = data.products || [];
         isOnline = true;
         
-        console.log('تم تحميل المنتجات من GitHub:', products.length, 'منتج');
+        console.log('✅ تم تحميل المنتجات بنجاح:', products.length, 'منتج');
         
     } catch (error) {
-        console.error('خطأ في تحميل البيانات من GitHub:', error);
+        console.error('❌ خطأ في تحميل البيانات:', error);
         isOnline = false;
         loadFromLocalStorage();
     }
@@ -34,7 +35,7 @@ function loadFromLocalStorage() {
     const savedProducts = localStorage.getItem('storeProducts');
     if (savedProducts) {
         products = JSON.parse(savedProducts);
-        console.log('تم تحميل المنتجات من localStorage:', products.length, 'منتج');
+        console.log('📱 تم تحميل المنتجات من localStorage:', products.length, 'منتج');
     } else {
         // بيانات افتراضية إذا لم توجد أي بيانات
         products = [
@@ -44,9 +45,16 @@ function loadFromLocalStorage() {
                 description: "هاتف ذكي حديث بمواصفات عالية",
                 price: 299.99,
                 image: "https://via.placeholder.com/200"
+            },
+            {
+                id: 2,
+                name: "لابتوب",
+                description: "لابتوب قوي للأعمال والألعاب",
+                price: 899.99,
+                image: "https://via.placeholder.com/200"
             }
         ];
-        console.log('تم تحميل البيانات الافتراضية');
+        console.log('🔧 تم تحميل البيانات الافتراضية');
     }
 }
 
@@ -65,9 +73,11 @@ async function updateGitHubFile() {
     }
 
     try {
+        console.log('🔼 جاري الرفع التلقائي إلى GitHub...');
+        
         // 1. الحصول على SHA الخاص بالملف الحالي
         const getResponse = await fetch(
-            `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${GITHUB_CONFIG.DATA_FILE}`,
+            `https://api.github.com/repos/wacelalorshe/markit/contents/products-data.json`,
             {
                 headers: {
                     'Authorization': `token ${token}`,
@@ -80,6 +90,9 @@ async function updateGitHubFile() {
         if (getResponse.ok) {
             const fileData = await getResponse.json();
             sha = fileData.sha;
+            console.log('📁 وجد الملف الحالي، SHA:', sha);
+        } else {
+            console.log('📄 الملف غير موجود، سيتم إنشاؤه جديد');
         }
 
         // 2. تحضير البيانات للرفع
@@ -91,7 +104,7 @@ async function updateGitHubFile() {
         
         // 3. رفع الملف المحدث
         const updateResponse = await fetch(
-            `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${GITHUB_CONFIG.DATA_FILE}`,
+            `https://api.github.com/repos/wacelalorshe/markit/contents/products-data.json`,
             {
                 method: 'PUT',
                 headers: {
@@ -100,23 +113,25 @@ async function updateGitHubFile() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    message: `🛍️ تحديث المنتجات - ${new Date().toLocaleString()}`,
+                    message: `🛍️ تحديث المنتجات - ${new Date().toLocaleString('ar-SA')}`,
                     content: contentBase64,
                     sha: sha,
-                    branch: GITHUB_CONFIG.BRANCH
+                    branch: 'main'
                 })
             }
         );
 
         if (!updateResponse.ok) {
             const errorData = await updateResponse.json();
+            console.error('❌ خطأ في الرفع:', errorData);
             throw new Error(errorData.message || 'فشل في رفع الملف');
         }
 
+        console.log('✅ تم الرفع التلقائي بنجاح');
         return true;
         
     } catch (error) {
-        console.error('GitHub API Error:', error);
+        console.error('❌ GitHub API Error:', error);
         throw error;
     }
 }
@@ -125,6 +140,7 @@ async function updateGitHubFile() {
 async function saveProductsWithUpload() {
     // حفظ في localStorage أولاً
     localStorage.setItem('storeProducts', JSON.stringify(products));
+    console.log('💾 تم الحفظ في localStorage');
     
     try {
         // محاولة الرفع التلقائي
@@ -132,7 +148,7 @@ async function saveProductsWithUpload() {
         return { success: true, method: 'auto' };
         
     } catch (error) {
-        console.log('الرفع التلقائي فشل، استخدام النسخ اليدوي:', error);
+        console.log('🔙 العودة للطريقة اليدوية بسبب:', error.message);
         
         // العودة للطريقة اليدوية
         const jsonString = JSON.stringify({ products }, null, 2);
@@ -156,12 +172,15 @@ async function saveProducts() {
 function addProduct(product) {
     product.id = getNextId();
     products.push(product);
+    console.log('➕ تم إضافة منتج جديد:', product.name);
     return product;
 }
 
 // حذف منتج
 function deleteProduct(productId) {
+    const product = products.find(p => p.id === productId);
     products = products.filter(p => p.id !== productId);
+    console.log('🗑️ تم حذف المنتج:', product?.name);
 }
 
 // تحميل المنتجات فوراً عند تشغيل الصفحة
