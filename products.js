@@ -138,8 +138,8 @@ async function saveProducts() {
     }
 }
 
-// إضافة منتج جديد - الدالة المصححة
-async function addProduct(productData) {
+// إضافة منتج جديد - الدالة المصححة والمبسطة
+function addProductSimple(productData) {
     // إنشاء المنتج الجديد
     const newProduct = {
         id: getNextId(),
@@ -153,23 +153,17 @@ async function addProduct(productData) {
     products.push(newProduct);
     console.log('➕ تم إضافة منتج جديد:', newProduct.name);
     
-    // حفظ البيانات مباشرة
-    const result = await saveProducts();
-    
-    return { product: newProduct, saveResult: result };
+    return newProduct;
 }
 
-// حذف منتج - الدالة المصححة
-async function deleteProduct(productId) {
+// حذف منتج - الدالة المصححة والمبسطة
+function deleteProductSimple(productId) {
     const productIndex = products.findIndex(p => p.id === productId);
     
     if (productIndex !== -1) {
         const deletedProduct = products[productIndex];
         products.splice(productIndex, 1);
         console.log('🗑️ تم حذف المنتج:', deletedProduct.name);
-        
-        // حفظ البيانات بعد الحذف
-        await saveProducts();
         return true;
     }
     
