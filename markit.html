@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجري الإلكتروني</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>متجري الإلكتروني</h1>
+        <nav>
+            <a href="index.html">الرئيسية</a>
+            <a href="admin.html">لوحة التحكم</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="products-container" id="productsContainer">
+            <!-- سيتم عرض المنتجات هنا باستخدام JavaScript -->
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2023 متجري الإلكتروني. جميع الحقوق محفوظة.</p>
+    </footer>
+
+    <script src="products.js"></script>
+    <script>
+        // عرض المنتجات
+        function displayProducts() {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = '';
+            
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product-card';
+                productElement.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <p class="price">$${product.price}</p>
+                    <button onclick="addToCart(${product.id})">أضف إلى السلة</button>
+                `;
+                container.appendChild(productElement);
+            });
+        }
+
+        // دالة إضافة إلى السلة (مثال)
+        function addToCart(productId) {
+            alert(`تمت إضافة المنتج ${productId} إلى السلة`);
+        }
+
+        // عرض المنتجات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', displayProducts);
+    </script>
+</body>
+</html>
