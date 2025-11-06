@@ -91,114 +91,113 @@ function removeProduct(productId) {
     }
 }
 
-// ✅ نظام الرفع المحسن مع معالجة الأخطاء
+// حفظ المنتجات
+async function saveProducts() {
+    // حفظ في localStorage أولاً
+    localStorage.setItem('myStoreProducts', JSON.stringify(storeProducts));
+    console.log('💾 تم الحفظ في localStorage');
+    
+    try {
+        // محاولة الرفع التلقائي
+        await uploadToGitHubAuto();
+        return { success: true, method: 'auto' };
+        
+    } catch (error) {
+        console.log('🔙 العودة للطريقة اليدوية بسبب:', error.message);
+        
+        // العودة للطريقة اليدوية
+        const jsonString = JSON.stringify({ products: storeProducts }, null, 2);
+        navigator.clipboard.writeText(jsonString);
+        
+        return { 
+            success: false, 
+            method: 'manual',
+            error: error.message,
+            data: jsonString
+        };
+    }
+}
+
+// الرفع التلقائي إلى GitHub
 async function uploadToGitHubAuto() {
     console.log('🚀 بدء الرفع التلقائي إلى GitHub...');
     
-    // قائمة بالتوكنات الاحتياطية (يمكن إضافة توكنات جديدة هنا)
-    const possibleTokens = [
-        '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'  // التوكن الحالي
-    ];
+    const token = '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';
     
-    let lastError = '';
+    // التحقق من التوكن
+    if (!token || token === 'YOUR_TOKEN_HERE') {
+        throw new Error('❌ لم يتم إعداد GitHub Token بشكل صحيح');
+    }
     
-    // تجربة كل توكن
-    for (const token of possibleTokens) {
-        console.log(`🔑 تجربة التوكن: ${token.substring(0, 10)}...`);
-        
-        try {
-            // 1. أولاً: اختبار صلاحية التوكن
-            const testResponse = await fetch('https://api.github.com/user', {
+    try {
+        // 1. الحصول على الملف الحالي
+        console.log('📡 جاري جلب الملف الحالي...');
+        const getResponse = await fetch(
+            'https://api.github.com/repos/wacelalorshe/markit/contents/products-data.json',
+            {
                 headers: {
                     'Authorization': `token ${token}`,
                     'Accept': 'application/vnd.github.v3+json'
                 }
-            });
-            
-            if (!testResponse.ok) {
-                lastError = `التوكن غير صالح: ${testResponse.status}`;
-                continue; // جرب التوكن التالي
             }
-            
-            console.log('✅ التوكن صالح، متابعة الرفع...');
-            
-            // 2. الحصول على الملف الحالي
-            const getResponse = await fetch(
-                'https://api.github.com/repos/wacelalorshe/markit/contents/products-data.json',
-                {
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                }
-            );
+        );
 
-            let sha = '';
-            
-            if (getResponse.ok) {
-                const fileData = await getResponse.json();
-                sha = fileData.sha;
-                console.log('✅ تم الحصول على الملف الحالي');
-            } else if (getResponse.status === 404) {
-                console.log('📄 الملف غير موجود، سيتم إنشاؤه جديد');
-            } else {
-                lastError = `فشل في جلب الملف: ${getResponse.status}`;
-                continue;
-            }
-
-            // 3. تحضير البيانات للرفع
-            console.log('📦 تحضير البيانات للرفع...');
-            const content = { products: storeProducts };
-            const contentString = JSON.stringify(content, null, 2);
-            const contentBase64 = btoa(unescape(encodeURIComponent(contentString)));
-            
-            // 4. رفع الملف المحدث
-            console.log('🔼 جاري رفع الملف...');
-            const updateResponse = await fetch(
-                'https://api.github.com/repos/wacelalorshe/markit/contents/products-data.json',
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `🛍️ تحديث المنتجات - ${new Date().toLocaleString('ar-SA')}`,
-                        content: contentBase64,
-                        sha: sha,
-                        branch: 'main'
-                    })
-                }
-            );
-
-            if (updateResponse.ok) {
-                const result = await updateResponse.json();
-                console.log('✅ تم الرفع بنجاح إلى GitHub');
-                return { 
-                    success: true, 
-                    message: 'تم الرفع التلقائي بنجاح!',
-                    url: result.content.html_url
-                };
-            } else {
-                const errorData = await updateResponse.json();
-                lastError = errorData.message || `خطأ في الرفع: ${updateResponse.status}`;
-                continue;
-            }
-            
-        } catch (error) {
-            lastError = error.message;
-            continue;
+        let sha = '';
+        
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            sha = fileData.sha;
+            console.log('✅ تم الحصول على الملف الحالي');
+        } else if (getResponse.status === 404) {
+            console.log('📄 الملف غير موجود، سيتم إنشاؤه جديد');
+        } else {
+            throw new Error(`فشل في جلب الملف: ${getResponse.status} ${getResponse.statusText}`);
         }
+
+        // 2. تحضير البيانات للرفع
+        console.log('📦 تحضير البيانات للرفع...');
+        const content = { products: storeProducts };
+        const contentString = JSON.stringify(content, null, 2);
+        const contentBase64 = btoa(unescape(encodeURIComponent(contentString)));
+        
+        // 3. رفع الملف المحدث
+        console.log('🔼 جاري رفع الملف...');
+        const updateResponse = await fetch(
+            'https://api.github.com/repos/wacelalorshe/markit/contents/products-data.json',
+            {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `🛍️ تحديث المنتجات - ${new Date().toLocaleString('ar-SA')}`,
+                    content: contentBase64,
+                    sha: sha,
+                    branch: 'main'
+                })
+            }
+        );
+
+        if (updateResponse.ok) {
+            const result = await updateResponse.json();
+            console.log('✅ تم الرفع بنجاح إلى GitHub');
+            return { 
+                success: true, 
+                message: 'تم الرفع التلقائي بنجاح!',
+                url: result.content.html_url
+            };
+        } else {
+            const errorData = await updateResponse.json();
+            console.error('❌ خطأ في الرفع:', errorData);
+            throw new Error(errorData.message || `خطأ في الرفع: ${updateResponse.status}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ فشل الرفع التلقائي:', error);
+        throw error;
     }
-    
-    // إذا وصلنا هنا، فكل التوكنات فشلت
-    console.error('❌ فشل جميع التوكنات:', lastError);
-    return { 
-        success: false, 
-        message: `فشل الرفع: ${lastError}`,
-        data: JSON.stringify({ products: storeProducts }, null, 2)
-    };
 }
 
 // الحصول على جميع المنتجات
@@ -208,4 +207,3 @@ function getAllProducts() {
 
 // التحميل التلقائي عند بدء التشغيل
 loadStoreProducts();
-
