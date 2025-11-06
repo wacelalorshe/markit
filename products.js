@@ -208,3 +208,4 @@ function getAllProducts() {
 
 // التحميل التلقائي عند بدء التشغيل
 loadStoreProducts();
+
