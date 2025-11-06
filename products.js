@@ -122,7 +122,7 @@ async function saveProducts() {
 async function uploadToGitHubAuto() {
     console.log('🚀 بدء الرفع التلقائي إلى GitHub...');
     
-    const token = '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';
+    const token = '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m';
     
     // التحقق من التوكن
     if (!token || token === 'YOUR_TOKEN_HERE') {
