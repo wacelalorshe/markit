@@ -4,26 +4,272 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>متجري الإلكتروني</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            direction: rtl;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        nav a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .store-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 10px;
+            margin: 2rem auto;
+            max-width: 1200px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .store-info h2 {
+            margin-bottom: 0.5rem;
+            font-size: 1.4rem;
+        }
+        
+        .store-info p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        main {
+            padding: 1rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .products-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 1rem 0;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 2px solid #f8f9fa;
+        }
+        
+        .product-card h3 {
+            margin: 0.5rem 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .product-card p {
+            margin-bottom: 0.5rem;
+            color: #7f8c8d;
+            line-height: 1.5;
+            min-height: 60px;
+        }
+        
+        .product-card .price {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 1.3rem;
+            margin: 1rem 0;
+        }
+        
+        .product-card button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .product-card button:hover {
+            background: linear-gradient(135deg, #2980b9, #1f618d);
+            transform: translateY(-2px);
+        }
+        
+        .refresh-section {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1rem;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #27ae60, #219955);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #6c757d;
+            grid-column: 1 / -1;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        footer {
+            background-color: #34495e;
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            nav a {
+                margin: 0 0.5rem;
+            }
+            
+            .products-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            main {
+                padding: 1rem;
+            }
+            
+            .store-info {
+                margin: 1rem;
+                padding: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1>متجري الإلكتروني</h1>
+        <h1>🛍️ متجري الإلكتروني</h1>
         <nav>
-            <a href="/">الرئيسية</a>
-            <a href="/admin.html">لوحة التحكم</a>
+            <a href="/">🏠 الرئيسية</a>
+            <a href="/admin.html">⚙️ لوحة التحكم</a>
         </nav>
     </header>
 
+    <div class="store-info">
+        <h2>مرحباً بكم في متجرنا الإلكتروني</h2>
+        <p>✨ اكتشف أحدث المنتجات بأسعار تنافسية ✨</p>
+    </div>
+
     <main>
         <div class="products-container" id="productsContainer">
-            <!-- سيتم عرض المنتجات هنا باستخدام JavaScript -->
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>جاري تحميل المنتجات...</p>
+            </div>
         </div>
         
-        <div style="text-align: center; margin: 20px;">
-            <button onclick="location.reload()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px;">
-                تحديث القائمة
+        <div class="refresh-section">
+            <button onclick="loadAndDisplayProducts()" class="refresh-btn">
+                🔄 تحديث القائمة
             </button>
+            <p style="margin-top: 0.5rem; color: #6c757d; font-size: 0.9rem;">
+                آخر تحديث: <span id="lastUpdate">--</span>
+            </p>
         </div>
     </main>
 
@@ -31,54 +277,154 @@
         <p>© 2023 متجري الإلكتروني. جميع الحقوق محفوظة.</p>
     </footer>
 
-    <script src="config.js"></script>
     <script src="products.js"></script>
     <script>
-        // عرض المنتجات في المتجر
-        function displayProducts() {
+        // ✅ دالة عرض المنتجات في المتجر
+        function displayProductsInStore() {
             const container = document.getElementById('productsContainer');
+            const lastUpdateElement = document.getElementById('lastUpdate');
+            
+            // تحديث وقت التحديث الأخير
+            lastUpdateElement.textContent = new Date().toLocaleString('ar-SA');
+            
+            // مسح المحتوى القديم
             container.innerHTML = '';
             
-            // تأكد من تحميل أحدث البيانات
-            loadProducts();
+            console.log('🛍️ عرض المنتجات في المتجر:', storeProducts.length, 'منتج');
             
-            if (products.length === 0) {
-                container.innerHTML = '<p class="no-products">لا توجد منتجات متاحة حالياً</p>';
+            if (storeProducts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <h3>لا توجد منتجات متاحة حالياً</h3>
+                        <p>يمكنك إضافة منتجات جديدة من لوحة التحكم</p>
+                        <a href="/admin.html" style="display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: #3498db; color: white; text-decoration: none; border-radius: 5px;">
+                            ⚙️ الذهاب للوحة التحكم
+                        </a>
+                    </div>
+                `;
                 return;
             }
             
-            products.forEach(product => {
+            // عرض كل المنتجات
+            storeProducts.forEach(product => {
                 const productElement = document.createElement('div');
                 productElement.className = 'product-card';
                 productElement.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/200'">
+                    <img src="${product.image}" alt="${product.name}" 
+                         onerror="this.src='https://via.placeholder.com/200?text=صورة+غير+متاحة'">
                     <h3>${product.name}</h3>
                     <p>${product.description}</p>
-                    <p class="price">$${product.price}</p>
-                    <button onclick="addToCart(${product.id})">أضف إلى السلة</button>
+                    <div class="price">$${product.price}</div>
+                    <button onclick="addToCart(${product.id})">
+                        🛒 أضف إلى السلة
+                    </button>
                 `;
                 container.appendChild(productElement);
             });
         }
-
-        // دالة إضافة إلى السلة (مثال)
+        
+        // ✅ دالة إضافة إلى السلة (وهمية للعرض)
         function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
+            const product = storeProducts.find(p => p.id === productId);
             if (product) {
-                alert(`تمت إضافة "${product.name}" إلى السلة`);
+                // يمكنك تغيير هذا الجزء ليتناسب مع نظام السلة الحقيقي
+                alert(`✅ تمت إضافة "${product.name}" إلى سلة التسوق\n\n💰 السعر: $${product.price}`);
+                
                 // هنا يمكنك إضافة منطق السلة الحقيقي
+                // addToCartLogic(product);
             }
         }
-
-        // عرض المنتجات عند تحميل الصفحة
+        
+        // ✅ دالة تحميل وعرض المنتجات
+        async function loadAndDisplayProducts() {
+            const container = document.getElementById('productsContainer');
+            
+            // عرض تحميل
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>جاري تحديث المنتجات...</p>
+                </div>
+            `;
+            
+            try {
+                console.log('🔄 جاري تحديث قائمة المنتجات...');
+                
+                // إعادة تحميل البيانات من GitHub
+                await loadStoreProducts();
+                
+                // عرض المنتجات بعد التحميل
+                displayProductsInStore();
+                
+                console.log('✅ تم تحديث قائمة المنتجات بنجاح');
+                
+            } catch (error) {
+                console.error('❌ خطأ في تحديث المنتجات:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <h3>حدث خطأ في تحميل المنتجات</h3>
+                        <p>جاري استخدام البيانات المحلية</p>
+                        <button onclick="displayProductsInStore()" class="refresh-btn" style="margin-top: 1rem;">
+                            🔄 المحاولة مرة أخرى
+                        </button>
+                    </div>
+                `;
+                
+                // عرض البيانات المحلية رغم الخطأ
+                displayProductsInStore();
+            }
+        }
+        
+        // ✅ دالة التحديث التلقائي
+        function startAutoRefresh() {
+            // تحديث كل 30 ثانية
+            setInterval(() => {
+                console.log('⏰ التحديث التلقائي للمنتجات...');
+                loadStoreProducts().then(() => {
+                    displayProductsInStore();
+                });
+            }, 30000); // 30 ثانية
+            
+            console.log('🔁 تم تفعيل التحديث التلقائي كل 30 ثانية');
+        }
+        
+        // ✅ دالة التحقق من التغييرات
+        function checkForChanges() {
+            let lastProductCount = storeProducts.length;
+            
+            setInterval(() => {
+                if (storeProducts.length !== lastProductCount) {
+                    console.log('🔄 اكتشاف تغيير في عدد المنتجات، جاري التحديث...');
+                    displayProductsInStore();
+                    lastProductCount = storeProducts.length;
+                }
+            }, 5000); // التحقق كل 5 ثواني
+        }
+        
+        // ✅ التحميل الأولي عند فتح الصفحة
         document.addEventListener('DOMContentLoaded', function() {
-            loadProducts(); // تأكد من تحميل أحدث البيانات
-            displayProducts();
+            console.log('🏪 بدء تحميل المتجر...');
+            
+            // الانتظار قليلاً لتحميل البيانات ثم العرض
+            setTimeout(() => {
+                displayProductsInStore();
+                startAutoRefresh();
+                checkForChanges();
+                console.log('✅ المتجر جاهز للعمل!');
+            }, 1000);
         });
-
-        // تحديث العرض عند العودة إلى الصفحة
+        
+        // ✅ تحديث الصفحة عند العودة لها
         window.addEventListener('pageshow', function() {
-            displayProducts();
+            console.log('🔄 العودة للمتجر، جاري التحديث...');
+            loadAndDisplayProducts();
+        });
+        
+        // ✅ تحديث عند تغيير حجم النافذة (للتأكد من التصميم المتجاوب)
+        window.addEventListener('resize', function() {
+            displayProductsInStore();
         });
     </script>
 </body>
