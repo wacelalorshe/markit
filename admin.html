@@ -499,7 +499,7 @@
             </div>
             
             <div class="connection-status" id="connectionStatus">
-                <!-- حالة الاتصال تظهر هنا -->
+                جاري التحميل...
             </div>
             
             <div class="add-product-form">
@@ -545,19 +545,19 @@
 
     <script src="products.js"></script>
     <script>
-        // ✅ دالة إضافة المنتج - الإصدار المؤكد
-        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+        // ✅ دالة إضافة المنتج - الإصدار المصحح
+        document.getElementById('addProductForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             console.log('🎯 تم النقر على إضافة المنتج!');
             
-            const name = document.getElementById('productName').value;
-            const description = document.getElementById('productDescription').value;
+            const name = document.getElementById('productName').value.trim();
+            const description = document.getElementById('productDescription').value.trim();
             const price = parseFloat(document.getElementById('productPrice').value);
-            const image = document.getElementById('productImage').value || 'https://via.placeholder.com/200';
+            const image = document.getElementById('productImage').value.trim() || 'https://via.placeholder.com/200';
             
             // التحقق من البيانات
             if (!name || !description || isNaN(price)) {
-                showMessage('⚠️ يرجى ملء جميع الحقول بشكل صحيح', 'error');
+                alert('⚠️ يرجى ملء جميع الحقول بشكل صحيح');
                 return;
             }
             
@@ -571,12 +571,29 @@
                 
                 console.log('📝 بيانات المنتج:', { name, description, price, image });
                 
-                // إضافة المنتج
+                // إضافة المنتج باستخدام الدالة الصحيحة
                 const productInfo = { name, description, price, image };
                 const newProduct = addNewProduct(productInfo);
                 
-                // رسالة النجاح
-                showMessage('✅ تمت إضافة المنتج بنجاح: ' + newProduct.name, 'success');
+                // حفظ البيانات
+                const saveResult = await saveProducts();
+                
+                if (saveResult.success) {
+                    showMessage('✅ تمت إضافة المنتج بنجاح ورفعه تلقائياً!', 'success');
+                } else {
+                    showMessage('📋 تمت الإضافة محلياً - تم نسخ البيانات للحافظة', 'info');
+                    
+                    setTimeout(() => {
+                        alert(`📋 خطوات الرفع اليدوي:
+                        
+1. اذهب إلى: https://github.com/wacelalorshe/markit
+2. افتح ملف products-data.json
+3. انقر Edit واستبدل المحتوى
+4. احفظ التغييرات
+
+البيانات جاهزة في الحافظة!`);
+                    }, 1000);
+                }
                 
                 // تحديث العرض
                 displayProducts();
@@ -587,7 +604,7 @@
                 console.log('🎉 اكتملت الإضافة بنجاح!');
                 
             } catch (error) {
-                console.error('❌ خطأ في الإضافة:', error);
+                console.error('❌ خطأ في إضافة المنتج:', error);
                 showMessage('❌ حدث خطأ في إضافة المنتج: ' + error.message, 'error');
             } finally {
                 // إعادة الزر
@@ -647,6 +664,7 @@
             if (confirm('⚠️ هل أنت متأكد من حذف هذا المنتج؟')) {
                 const success = removeProduct(productId);
                 if (success) {
+                    saveProducts(); // حفظ التغييرات
                     showMessage('🗑️ تم حذف المنتج بنجاح', 'success');
                     displayProducts();
                 } else {
